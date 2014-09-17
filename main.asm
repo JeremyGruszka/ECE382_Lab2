@@ -15,9 +15,15 @@
                                             ; that have references to current
                                             ; section
 
-message		.byte	0xef,0xc3,0xc2,0xcb,0xde,0xcd,0xd8,0xd9,0xc0,0xcd,0xd8,0xc5,0xc3,0xc2,0xdf,0x8d,0x8c,0x8c,0xf5,0xc3,0xd9,0x8c,0xc8,0xc9,0xcf,0xde,0xd5,0xdc,0xd8,0xc9,0xc8,0x8c,0xd8,0xc4,0xc9,0x8c,0xe9,0xef,0xe9,0x9f,0x94,0x9e,0x8c,0xc4,0xc5,0xc8,0xc8,0xc9,0xc2,0x8c,0xc1,0xc9,0xdf,0xdf,0xcd,0xcb,0xc9,0x8c,0xcd,0xc2,0xc8,0x8c,0xcd,0xcf,0xc4,0xc5,0xc9,0xda,0xc9,0xc8,0x8c,0xde,0xc9,0xdd,0xd9,0xc5,0xde,0xc9,0xc8,0x8c,0xca,0xd9,0xc2,0xcf,0xd8,0xc5,0xc3,0xc2,0xcd,0xc0,0xc5,0xd8,0xd5,0x8f
+message		.byte	0xf8,0xb7,0x46,0x8c,0xb2,0x46,0xdf,0xac,0x42,0xcb,0xba,0x03,0xc7,0xba,0x5a,0x8c,0xb3,0x46,0xc2,0xb8,0x57,0xc4,0xff,0x4a,0xdf,0xff,0x12,0x9a,0xff,0x41,0xc5,0xab,0x50,0x82,0xff,0x03,0xe5,0xab,0x03,0xc3,0xb1,0x4f,0xd5,0xff,0x40,0xc3,0xb1,0x57,0xcd,0xb6,0x4d,0xdf,0xff,0x4f,0xc9,0xab,0x57,0xc9,0xad,0x50,0x80,0xff,0x53,0xc9,0xad,0x4a,0xc3,0xbb,0x50,0x80,0xff,0x42,0xc2,0xbb,0x03,0xdf,0xaf,0x42,0xcf,0xba,0x50,0x8f
 
-key:		.byte	0xac					;key used for encryption/decryption
+key:		.byte	0xac, 0xdf, 0x23		;key used for encryption/decryption
+
+memLocation:.equ	0x0200					;constant for memory location in RAM
+
+keyLength:	.equ	0x03					;length of key for B functionality
+
+mesLength:	.equ	0x5E					;length of message
 
 ;-------------------------------------------------------------------------------
 
@@ -29,8 +35,9 @@ StopWDT     mov.w   #WDTPW|WDTHOLD,&WDTCTL  ; Stop watchdog timer
 ;-------------------------------------------------------------------------------
 
 			mov.w	#message, R4            ;
-            mov.w	#0x0200, R10			; load registers with necessary info for decryptMessage here
-            								;
+            mov.w	#memLocation, R10		; load registers with necessary info for decryptMessage here
+            mov.w	#key, R6				;
+			mov.w	#keyLength, R7			;
 
             call    #decryptMessage
 
@@ -49,22 +56,31 @@ forever:    jmp     forever
 ;           the message by value.  Uses the decryptCharacter subroutine to decrypt
 ;           each byte of the message.  Stores theresults to the decrypted message
 ;           location.
-;Inputs:	R4 (message), R11 (counter)
-;Outputs:
-;Registers destroyed:
+;Inputs:	R4 (message), R11 (message length counter), R6 (key), R7 (key length)
+;Outputs:	Decrypted Message in RAM starting at location 0x0200
+;Registers destroyed:	None
 ;-------------------------------------------------------------------------------
 
 decryptMessage:
 
-			mov.w	#0x5E, R11			;counter for length of message
+			mov.w	#mesLength, R11		;counter for length of message
 			mov.b	@R4+, R5			;moves next part of message into register
+			mov.b	@R6+, R8			;moves next part of key into register
 			call	#decryptCharacter
 			mov.b	R5, 0(R10)			;stores decrypted message in memory
 			inc.w	R10
+			dec.w	R7
+			jz		keyTracker			;resets the key if it reaches the end of the key
+subReset
 			dec.w	R11
-			jnz		decryptMessage
+			jnz		decryptMessage		;re-runs decrypt message as long as there is part of the message left
 
             ret
+
+keyTracker
+			mov.w	#key, R6
+			mov.w	#keyLength, R7
+			jmp		subReset
 
 ;-------------------------------------------------------------------------------
 ;Subroutine Name: decryptCharacter
@@ -72,14 +88,14 @@ decryptMessage:
 ;Function: Decrypts a byte of data by XORing it with a key byte.  Returns the
 ;           decrypted byte in the same register the encrypted byte was passed in.
 ;           Expects both the encrypted data and key to be passed by value.
-;Inputs:	R5 (character)
+;Inputs:	R5 (character), R8 (key)
 ;Outputs:	R5 (decrypted character)
 ;Registers destroyed:	R5
 ;-------------------------------------------------------------------------------
 
 decryptCharacter:
 
-			xor		key, R5				;decrypts character
+			xor		R8, R5				;decrypts character
 
             ret
 
