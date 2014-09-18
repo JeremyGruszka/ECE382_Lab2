@@ -2,7 +2,7 @@
 ; Lab 2
 ; Jeremy Gruszka, 15 SEP 2014
 ;
-; Encrypter -- Takes in a message, uses a key to encrpyt the message, then uses
+; Encrypter -- Takes in an encrypted message and a key, then uses
 ;			   the same key to decrypt the message.
 ;-------------------------------------------------------------------------------
             .cdecls C,LIST,"msp430.h"       ; Include device header file
