@@ -9,6 +9,11 @@ Note - It says that I committed my main.asm at 1706 hours on Thursday.  I actual
 
 Encrypter -- Takes in an encrypted message and a key, then uses the same key to decrypt the message.
 
+According to the Lab 2 handout on the sharepoint, the objective is:
+
+You'll practice your programming skills by writing some subroutines. You'll need to use both the call-by-value and call-by-reference techniques to pass arguments to your subroutines.
+
+
 ####Flow Chart and Pseudocode
 
 ![alt text](https://raw.githubusercontent.com/JeremyGruszka/ECE382_Lab2/master/flowchart.jpg "Flowchart")
@@ -18,42 +23,42 @@ Encrypter -- Takes in an encrypted message and a key, then uses the same key to 
 ####Code
 
 ```
-            .text                           ; Assemble into program memory
-            .retain                         ; Override ELF conditional linking
-                                            ; and retain current section
-            .retainrefs                     ; Additionally retain any sections
-                                            ; that have references to current
-                                            ; section
+            	.text                           ; Assemble into program memory
+            	.retain                         ; Override ELF conditional linking
+                                            	; and retain current section
+            	.retainrefs                     ; Additionally retain any sections
+                                            	; that have references to current
+                                            	; section
 
-message		  .byte	0xf8,0xb7,0x46,0x8c,0xb2,0x46,0xdf,0xac,0x42,0xcb,0xba,0x03,0xc7,0xba,0x5a,0x8c,0xb3,0x46,0xc2,0xb8,0x57,0xc4,0xff,0x4a,0xdf,0xff,0x12,0x9a,0xff,0x41,0xc5,0xab,0x50,0x82,0xff,0x03,0xe5,0xab,0x03,0xc3,0xb1,0x4f,0xd5,0xff,0x40,0xc3,0xb1,0x57,0xcd,0xb6,0x4d,0xdf,0xff,0x4f,0xc9,0xab,0x57,0xc9,0xad,0x50,0x80,0xff,0x53,0xc9,0xad,0x4a,0xc3,0xbb,0x50,0x80,0xff,0x42,0xc2,0xbb,0x03,0xdf,0xaf,0x42,0xcf,0xba,0x50,0x8f
+message		.byte	0xf8,0xb7,0x46,0x8c,0xb2,0x46,0xdf,0xac,0x42,0xcb,0xba,0x03,0xc7,0xba,0x5a,0x8c,0xb3,0x46,0xc2,0xb8,0x57,0xc4,0xff,0x4a,0xdf,0xff,0x12,0x9a,0xff,0x41,0xc5,0xab,0x50,0x82,0xff,0x03,0xe5,0xab,0x03,0xc3,0xb1,0x4f,0xd5,0xff,0x40,0xc3,0xb1,0x57,0xcd,0xb6,0x4d,0xdf,0xff,0x4f,0xc9,0xab,0x57,0xc9,0xad,0x50,0x80,0xff,0x53,0xc9,0xad,0x4a,0xc3,0xbb,0x50,0x80,0xff,0x42,0xc2,0xbb,0x03,0xdf,0xaf,0x42,0xcf,0xba,0x50,0x8f
 
-key:		    .byte	0xac, 0xdf, 0x23		;key used for encryption/decryption
+key:		.byte	0xac, 0xdf, 0x23	;key used for encryption/decryption
 
-memLocation:.equ	0x0200					;constant for memory location in RAM
+memLocation:	.equ	0x0200			;constant for memory location in RAM
 
-keyLength:	.equ	0x03					;length of key for B functionality
+keyLength:	.equ	0x03			;length of key for B functionality
 
-mesLength:	.equ	0x5E					;length of message
+mesLength:	.equ	0x5E			;length of message
 
 ;-------------------------------------------------------------------------------
 
-RESET       mov.w   #__STACK_END,SP         ; Initialize stackpointer
-StopWDT     mov.w   #WDTPW|WDTHOLD,&WDTCTL  ; Stop watchdog timer
+RESET       	mov.w   #__STACK_END,SP         ; Initialize stackpointer
+StopWDT     	mov.w   #WDTPW|WDTHOLD,&WDTCTL  ; Stop watchdog timer
 
 ;-------------------------------------------------------------------------------
 ; Main loop here
 ;-------------------------------------------------------------------------------
 
-			      mov.w	#message, R4        ;
-            mov.w	#memLocation, R10		; load registers with necessary info for decryptMessage here
-            mov.w	#key, R6				    ;
-			      mov.w	#keyLength, R7			;
+		mov.w	#message, R4        	;
+            	mov.w	#memLocation, R10	; load registers with necessary info for decryptMessage here
+            	mov.w	#key, R6		;
+		mov.w	#keyLength, R7		;
 
-            call    #decryptMessage
+            	call    #decryptMessage
 
-forever:    jmp     forever
+forever:    	jmp     forever
 ```
-This section of code contains the constants and the main section of the program.  message is the array holding the encrypted message.  key is the array holding the decryption key. The three .equ lines create constants so that magic numbers need not be used in the program.  The three first lines in the main loop set up storage of the hex equation and memory locations.  The main section of the code loads the message, key, key length, and memory starting point into registers for use by the program.
+This section of code contains the constants and the main section of the program.  message is the array holding the encrypted message.  key is the array holding the decryption key. The three .equ lines create constants so that magic numbers do not need to be used in the program.  The three first lines in the main loop set up storage of the hex equation and memory locations.  The main section of the code loads the message, key, key length, and memory starting point into registers for use by the program.
 
 ```
 ;-------------------------------------------------------------------------------
@@ -73,25 +78,25 @@ This section of code contains the constants and the main section of the program.
 decryptMessage:
 
 			mov.w	#mesLength, R11		;counter for length of message
-			mov.b	@R4+, R5			    ;moves next part of message into register
-			mov.b	@R6+, R8		    	;moves next part of key into register
+			mov.b	@R4+, R5		;moves next part of message into register
+			mov.b	@R6+, R8		;moves next part of key into register
 			call	#decryptCharacter
-			mov.b	R5, 0(R10)			  ;stores decrypted message in memory
+			mov.b	R5, 0(R10)		;stores decrypted message in memory
 			inc.w	R10
 			dec.w	R7
-			jz		keyTracker		  	;resets the key if it reaches the end of the key
+			jz	keyTracker		;resets the key if it reaches the end of the key
 subReset
 			dec.w	R11
-			jnz		decryptMessage		;re-runs decrypt message as long as there is part of the message left
+			jnz	decryptMessage		;re-runs decrypt message as long as there is part of the message left
 
-            ret
+            		ret
 
 keyTracker
 			mov.w	#key, R6
 			mov.w	#keyLength, R7
-			jmp		subReset
+			jmp	subReset
 ```
-This section of contains the decryptMessage subroutine. I had to manually count the length of the encrypted message, and then made a for loop that decrypted the message until the message was fully decrypted.  This part of the code also contains the B functionality.  It essentially uses the key until the key is fully used, and then resets the key.  This allows any length
+This section of contains the decryptMessage subroutine. I had to manually count the length of the encrypted message, and then made a for loop that decrypted the message until the message was fully decrypted.  This part of the code also contains the B functionality.  It essentially uses the key until the key is fully used, and then resets the key.  This allows any length of key to be used for decrption.
 
 ```
 ;-------------------------------------------------------------------------------
@@ -107,47 +112,31 @@ This section of contains the decryptMessage subroutine. I had to manually count 
 
 decryptCharacter:
 
-			xor		R8, R5				;decrypts character
+			xor	R8, R5		;decrypts character
 
-            ret
+            		ret
 ```
-This final section of code contains the decrypt character subroutine.  
-```
+This final section of code contains the decrypt character subroutine.  It takes in an individual byte and XORs it with the key which decrypts the byte.  It then sends it back to the decryptMessage subroutine for storage in RAM.
 
-;-------------------------------------------------------------------------------
-; Checks to see if the operation is an 44, and if so, adds a 00 to memory
-;-------------------------------------------------------------------------------
-checkClear
-          cmp.b	#Clear, R7
-          jnz	end	          ;operation is a 55, end program
-          mov.b	#0x00, R9
-          mov.b	R9, 0(R10)
-          inc.w	R10
-          mov.b	R8, R6
-          jmp	main
-```
-This section of the program works with the Clear function of the calculator.  When a 0x44 is read by the program, it writes 0x00 to memory and starts the program over with the next part of the equation.  If not, this means a 0x55 is being read and the equation is at an end.  The clearing operation required a different approach to reseting the program and thus jumped back to main for reset.
-
-```
-;-------------------------------------------------------------------------------
-; Resets the program after a non clearing operation
-;-------------------------------------------------------------------------------
-nonClearOp
-          mov.b	R9, R6
-          mov.b	@R5+, R7
-          mov.b	@R5+, R8
-          jmp	checkAdd
-```
-This section of code resets the program after non clearing operations.
 
 ####Debugging/Testing
 
-I started the program by using the basic outline given in the handout for lab 1 help.  That gave me the basic idea of how I would write the program.  However, the handout had different functions than what we needed in this lab so I had to write those functions myself, as well as figure out how to get B functionality and reset the program depending on the type of operation being done.  
+I started the program by using the basic outline given in the Lab 2 instructions on the sharepoint.  That gave me the basic idea of how I would write the program.  I had the basic outline and then had to fill in each portion to get the program functionality working.  
 
-I didn't have too many problems with this program surprisingly.  I wrote the code I believed would work and it worked.  The hard part of the program for me was getting the B functionality.  I had to go through multiple iterations of writing and testing code to get it working.  
+I wrote the program as I thought it should work and tried compiling.  I had a weird error at the XOR portion of the decrpytCharacter subroutine where it was saying something along the lines of the key register was not allowed in the subroutine.  After pulling out my hair for ahwile, I realized that I needed to change my key from a .equ to .byte in order to place it in ROM.  That was the only problem that I had with the required funcitonality.
+
+My biggest problem with B functionality was finding an easy yet simple way to reset the key once the end of the key is reached.  I solved this by using jumps inside the decryptMessage subroutine to temporarily leave the subroutine and reset the key, then return to the same spot in the subroutine.
 
 Unfortunately, due to time constraints, other homework, and my lack of creativity with this particular type of programming, I was not able to get the A functionality of the code working.
 
+####Conclusions/Results
+
 I ran the test cases given by the lab handout for the basic program and for the B functionality.  Each test produced the correct result, showing that my basic program worked and that my B functionality worked.
 
-Documentation:  Class notes and handouts, Lab 1 handout, C2C Taylor Bodin's readme as a guideline
+Here is a picture of my memory after running my program, showing that my required functionality works:
+![alt text](https://raw.githubusercontent.com/JeremyGruszka/ECE382_Lab2/master/required_functionality.jpg "Required Functionality")
+
+Here is a picture of my memory after running my program, showing that my B functionality works:
+![alt text](https://raw.githubusercontent.com/JeremyGruszka/ECE382_Lab2/master/B_functionality.jpg "B Functionality")
+
+Documentation:  Class notes and handouts, Lab 2 handout, My previous work and labs
